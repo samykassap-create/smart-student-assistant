@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>دليل الطالب الذكي</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#1d2433;--muted:#667085;--main:#2457d6;--line:#dde3ee;--ok:#12805c;--bad:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#10141f;--card:#1a2030;--text:#e8ecf5;--muted:#9aa5bb;--main:#6c93ff;--line:#2b3348;--ok:#4cc79a;--bad:#ff7b6b}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.7}
+header{background:var(--main);color:#fff;padding:18px 20px;text-align:center}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;font-size:14px;opacity:.9}
+nav{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;padding:12px;background:var(--card);border-bottom:1px solid var(--line)}
+nav button{border:1px solid var(--line);background:var(--bg);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font:inherit}
+nav button.on{background:var(--main);color:#fff;border-color:var(--main)}
+main{max-width:980px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:8px;border-bottom:1px solid var(--line);text-align:right}
+th{color:var(--muted);font-weight:600}
+input,textarea{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;margin:4px 0 8px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:140px}
+.btn{background:var(--main);color:#fff;border:0;padding:9px 16px;border-radius:8px;cursor:pointer;font:inherit}
+.btn.red{background:var(--bad)}.btn.sm{padding:4px 10px;font-size:13px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.muted{color:var(--muted);font-size:13px}
+pre{white-space:pre-wrap;font:inherit;margin:0}
+.log{font-family:monospace;font-size:12px;direction:ltr;text-align:left;border-bottom:1px solid var(--line);padding:3px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎓 دليل الطالب الذكي</h1>
+  <p>نظام الإرشاد الأكاديمي واسترجاع المعلومات (TF-IDF)</p>
+</header>
+<nav id="nav">
+  <button data-t="courses" class="on">المقررات</button>
+  <button data-t="advisor">فحص المواد المتاحة</button>
+  <button data-t="search">البحث في اللوائح</button>
+  <button data-t="docs">اللوائح الكاملة</button>
+  <button data-t="admin">لوحة الإدارة</button>
+</nav>
+<main>
+  <section id="courses" class="on"><div class="card tw" id="coursesBox">جاري التحميل...</div></section>
+
+  <section id="advisor">
+    <div class="card">
+      <b>أدخل رموز المواد التي اجتزتها مفصولة بفاصلة</b>
+      <input id="passed" placeholder="مثال: CS101, MATH101" dir="ltr">
+      <p class="muted">اتركه فارغًا لو طالب مستجد.</p>
+      <button class="btn" onclick="runAdvisor()">فحص</button>
+    </div>
+    <div id="advisorOut"></div>
+  </section>
+
+  <section id="search">
+    <div class="card">
+      <input id="q" placeholder="مثال: عقوبة الغياب، حساب المعدل، الساعات المسموحة" onkeydown="if(event.key==='Enter')runSearch()">
+      <button class="btn" onclick="runSearch()">بحث</button>
+    </div>
+    <div id="searchOut"></div>
+  </section>
+
+  <section id="docs">
+    <div class="card row">
+      <button class="btn" onclick="showDoc('attendance_policy.txt')">الحضور والغياب</button>
+      <button class="btn" onclick="showDoc('gpa_system.txt')">التقديرات والمعدل</button>
+      <button class="btn" onclick="showDoc('registration_rules.txt')">قواعد التسجيل</button>
+    </div>
+    <div class="card" id="docOut"><span class="muted">اختر لائحة لعرضها.</span></div>
+  </section>
+
+  <section id="admin">
+    <div class="card" id="loginBox">
+      <b>كلمة مرور المسؤول</b>
+      <input id="pwd" type="password" dir="ltr" onkeydown="if(event.key==='Enter')login()">
+      <button class="btn" onclick="login()">دخول</button>
+      <span id="loginMsg" class="bad"></span>
+    </div>
+    <div id="adminBox" style="display:none">
+      <div class="card">
+        <b>إضافة مقرر</b>
+        <div class="row">
+          <input id="a_id" placeholder="الرمز (CS205)" dir="ltr">
+          <input id="a_name" placeholder="اسم المادة">
+          <input id="a_inst" placeholder="المحاضر">
+          <input id="a_room" placeholder="القاعة">
+          <input id="a_hrs" placeholder="الساعات" value="3">
+        </div>
+        <input id="a_pre" placeholder="المتطلبات السابقة مفصولة بفاصلة (اختياري)" dir="ltr">
+        <button class="btn" onclick="addCourse()">إضافة</button>
+      </div>
+      <div class="card">
+        <b>إضافة لائحة جديدة</b>
+        <input id="d_name" placeholder="اسم الملف (examination_rules.txt)" dir="ltr">
+        <textarea id="d_text" rows="5" placeholder="نص اللائحة"></textarea>
+        <button class="btn" onclick="addDoc()">حفظ وإعادة بناء الفهرس</button>
+      </div>
+      <div class="card tw" id="adminCourses"></div>
+      <div class="card">
+        <button class="btn sm" onclick="loadLogs()">عرض السجل</button>
+        <button class="btn sm red" onclick="resetData()">استعادة البيانات الافتراضية</button>
+        <div id="logs" style="margin-top:8px"></div>
+      </div>
+      <div id="adminMsg" class="ok"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(url, body){
+  const opt = body !== undefined ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : {};
+  const r = await fetch(url, opt);
+  return {ok:r.ok, data: await r.json().catch(()=>({}))};
+}
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('section').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
+});
+
+function courseTable(list, withDel){
+  if(!list.length) return '<span class="muted">لا توجد مقررات.</span>';
+  let h = '<table><tr><th>الرمز</th><th>المادة</th><th>المحاضر</th><th>القاعة</th><th>الساعات</th><th>المتطلبات</th>' + (withDel?'<th></th>':'') + '</tr>';
+  for(const c of list){
+    const pre = (c.prereqs||[]).join(', ') || 'بدون';
+    h += `<tr><td dir="ltr">${esc(c.course_id)}</td><td>${esc(c.course_name)}</td><td>${esc(c.instructor)}</td><td>${esc(c.room)}</td><td>${esc(c.credit_hours)}</td><td dir="ltr">${esc(pre)}</td>` +
+         (withDel?`<td><button class="btn sm red" onclick="delCourse('${esc(c.course_id)}')">حذف</button></td>`:'') + '</tr>';
+  }
+  return h + '</table>';
+}
+async function loadCourses(){
+  const {data} = await api('/api/courses');
+  const list = data.courses || [];
+  $('coursesBox').innerHTML = courseTable(list, false);
+  $('adminCourses').innerHTML = courseTable(list, true);
+}
+
+async function runAdvisor(){
+  const passed = $('passed').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  const {data} = await api('/api/advisor', {passed});
+  let h = `<div class="card"><b class="ok">المتاح للتسجيل: ${data.available.length}</b> &nbsp; <b class="bad">المغلق: ${data.locked.length}</b></div>`;
+  h += `<div class="card tw"><b>المقررات المتاحة</b>${courseTable(data.available,false)}</div>`;
+  if(data.locked.length){
+    h += '<div class="card tw"><b>المقررات المغلقة</b><table><tr><th>الرمز</th><th>المادة</th><th>ينقصك</th></tr>';
+    for(const c of data.locked) h += `<tr><td dir="ltr">${esc(c.course_id)}</td><td>${esc(c.course_name)}</td><td dir="ltr" class="bad">${esc(c.missing_prereqs.join(', '))}</td></tr>`;
+    h += '</table></div>';
+  }
+  $('advisorOut').innerHTML = h;
+}
+
+async function runSearch(){
+  const query = $('q').value.trim();
+  if(!query) return;
+  const {data} = await api('/api/search', {query});
+  if(!data.results || !data.results.length){ $('searchOut').innerHTML = '<div class="card bad">لم يتم العثور على نتائج. جرب: غياب، معدل، تسجيل.</div>'; return; }
+  $('searchOut').innerHTML = data.results.map((r,i) =>
+    `<div class="card"><b>#${i+1} <span dir="ltr">${esc(r.file)}</span></b> <span class="ok">تشابه ${esc(r.score)}%</span><hr><pre>${esc(r.snippet)}</pre></div>`).join('');
+}
+
+async function showDoc(name){
+  const {ok,data} = await api('/api/doc/' + encodeURIComponent(name));
+  $('docOut').innerHTML = ok ? `<pre>${esc(data.content)}</pre>` : '<span class="bad">المستند غير موجود.</span>';
+}
+
+async function login(){
+  const {ok,data} = await api('/api/admin/login', {password: $('pwd').value});
+  if(ok && data.success){ $('loginBox').style.display='none'; $('adminBox').style.display='block'; loadCourses(); }
+  else $('loginMsg').textContent = data.message || 'كلمة المرور غير صحيحة';
+}
+function msg(r){ $('adminMsg').className = r.ok ? 'ok' : 'bad'; $('adminMsg').textContent = r.data.message || r.data.error || ''; }
+async function addCourse(){
+  const r = await api('/api/admin/course/add', {
+    course_id:$('a_id').value, course_name:$('a_name').value, instructor:$('a_inst').value,
+    room:$('a_room').value, credit_hours:$('a_hrs').value || '3',
+    prerequisites:$('a_pre').value.split(',')
+  });
+  msg(r); if(r.ok) loadCourses();
+}
+async function delCourse(id){
+  if(!confirm('حذف المقرر ' + id + ' نهائيًا؟')) return;
+  msg(await api('/api/admin/course/delete', {course_id:id})); loadCourses();
+}
+async function addDoc(){
+  msg(await api('/api/admin/doc/add', {filename:$('d_name').value, content:$('d_text').value}));
+}
+async function loadLogs(){
+  const {data} = await api('/api/admin/logs');
+  $('logs').innerHTML = (data.logs||[]).map(l => `<div class="log">${esc(l)}</div>`).join('') || '<span class="muted">السجل فارغ.</span>';
+}
+async function resetData(){
+  if(!confirm('سيتم استعادة البيانات الافتراضية. متأكد؟')) return;
+  msg(await api('/api/admin/reset', {})); loadCourses();
+}
+loadCourses();
+</script>
+</body>
+</html>
